@@ -6,19 +6,20 @@ def lambda_handler(event, context):
     print("Received event: " + pprint.pformat(event))
     dynamo = boto3.resource('dynamodb', region_name="us-west-2").Table("calligre-posts")
     timestamp = Decimal(time.time())
-    media_link = event.get("media_link")
-    if media_link == "":
-        media_link = None
+    details = event.get("body-json", {})
+    item = {
+        "posts": "posts",
+        "timestamp" : timestamp,
+        "posterid" : details.get("posterid"),
+        "like_count" : 0,
+        "text": details.get("text", "No text provided")
+    }
+    media_link = details.get("media_link")
+    if media_link:
+        item['media_link'] = media_link
+    print(r)
     r = dynamo.put_item(
-        Item={
-            "posts": "posts",
-            "timestamp" : timestamp,
-            "posterid" : event.get("poster"),
-            # "likes": None, - don't insert likes, ADDing to a NULL results in a type mismatch
-            "media_link": media_link,
-            "like_count" : 0,
-            "text": event.get("text")
-        },
+        Item=item,
         ConditionExpression=Attr("timestamp").ne(timestamp)
     )
     return {
