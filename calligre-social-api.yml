@@ -161,6 +161,9 @@ paths:
       - "application/json"
       produces:
       - "application/json"
+      description: |
+        Returns a url & set of fields that can be used to post a photo to S3.
+        Photos will be resized for use; non-photo objects will be deleted.
       responses:
         200:
           description: "200 response"
@@ -489,6 +492,8 @@ definitions:
           $ref: '#/definitions/PostDetails'
   PostDetails:
     type: "object"
+    description: |
+      This is a single post.
     properties:
       id:
         type: "string"
@@ -508,7 +513,7 @@ definitions:
         type: boolean
   PostAck:
     type: "object"
-    title: "Post submission Acknowledgement"
+    title: "Post Acknowledgement"
     properties:
       id:
         type: "string"
@@ -525,7 +530,18 @@ definitions:
       name:
         type: string
   MediaDestUrl:
-    type: string
+    type: object
+    properties:
+      url:
+        type: string
+      fields:
+        description: |
+          Fields required by S3 that must be posted as part of the file upload.
+          In Python, this would be requests.post(post["url"], data=post["fields"], files=files)
+        type: object
+        properties:
+          opaque:
+            type: string
   NewPost:
     type: object
     properties:
