@@ -1,0 +1,533 @@
+---
+swagger: "2.0"
+info:
+  version: "2016-08-04T18:21:19Z"
+  title: "Calligre"
+host: "calligre.com"
+basePath: "/api"
+schemes:
+- "https"
+paths:
+  /:
+    options:
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "200 response"
+          schema:
+            $ref: "#/definitions/Empty"
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Headers:
+              type: "string"
+      x-amazon-apigateway-integration:
+        requestTemplates:
+          application/json: "{\"statusCode\": 200}"
+        passthroughBehavior: "when_no_match"
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Methods: "'OPTIONS'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        type: "mock"
+  /content:
+    get:
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "limit"
+        in: "query"
+        required: false
+        type: "string"
+      - name: "offset"
+        in: "query"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "200 response"
+          schema:
+            $ref: "#/definitions/PostList"
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+      x-amazon-apigateway-integration:
+        requestTemplates:
+          application/json: "##  See http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html\n\
+            ##  This template will pass through all parameters including path, querystring,\
+            \ header, stage variables, and context through to the integration endpoint\
+            \ via the body/payload\n#set($allParams = $input.params())\n{\n#foreach($type\
+            \ in $allParams.keySet())\n    #set($params = $allParams.get($type))\n\
+            \"$type\" : {\n    #foreach($paramName in $params.keySet())\n    \"$paramName\"\
+            \ : \"$util.escapeJavaScript($params.get($paramName))\"\n        #if($foreach.hasNext),#end\n\
+            \    #end\n},\n#end\n\"context\" : {\n    \"http-method\" : \"$context.httpMethod\"\
+            ,\n    \"resource-path\" : \"$context.resourcePath\"\n    },\n\"page\"\
+            : \"$util.escapeJavaScript($allParams.get('page'))\",\n\"limit\": \"$util.escapeJavaScript($allParams.get('limit'))\"\
+            \n}\n"
+        uri: "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:037954390517:function:getCalligreContent/invocations"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "POST"
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        type: "aws"
+    post:
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "post"
+        in: body
+        required: true
+        schema:
+          $ref: "#/definitions/NewPost"
+      responses:
+        200:
+          description: "200 response"
+          schema:
+            $ref: "#/definitions/PostAck"
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+      x-amazon-apigateway-integration:
+        requestTemplates:
+          application/json: "##  See http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html\r\
+            \n##  This template will pass through all parameters including path, querystring,\
+            \ header, stage variables, and context through to the integration endpoint\
+            \ via the body/payload\r\n#set($allParams = $input.params())\r\n{\r\n\"\
+            body-json\" : $input.json('$'),\r\n\"params\" : {\r\n#foreach($type in\
+            \ $allParams.keySet())\r\n    #set($params = $allParams.get($type))\r\n\
+            \"$type\" : {\r\n    #foreach($paramName in $params.keySet())\r\n    \"\
+            $paramName\" : \"$util.escapeJavaScript($params.get($paramName))\"\r\n\
+            \        #if($foreach.hasNext),#end\r\n    #end\r\n}\r\n    #if($foreach.hasNext),#end\r\
+            \n#end\r\n},\r\n\"context\" : {\r\n    \"http-method\" : \"$context.httpMethod\"\
+            ,\r\n    \"resource-path\" : \"$context.resourcePath\"\r\n},\r\n\"poster\"\
+            : $input.json('$.poster'),\r\n\"text\": $input.json('$.text'),\r\n\"media_link\"\
+            : $input.json('$.media_link')\r\n}\r\n"
+        uri: "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:037954390517:function:addPost/invocations"
+        passthroughBehavior: "when_no_templates"
+        httpMethod: "POST"
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        type: "aws"
+    options:
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "200 response"
+          schema:
+            $ref: "#/definitions/Empty"
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Headers:
+              type: "string"
+      x-amazon-apigateway-integration:
+        requestTemplates:
+          application/json: "{\"statusCode\": 200}"
+        passthroughBehavior: "when_no_match"
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        type: "mock"
+  /content/get_upload_url:
+    get:
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "200 response"
+          schema:
+            $ref: "#/definitions/MediaDestUrl"
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+    options:
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "200 response"
+          schema:
+            $ref: "#/definitions/Empty"
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Headers:
+              type: "string"
+      x-amazon-apigateway-integration:
+        requestTemplates:
+          application/json: "{\"statusCode\": 200}"
+        passthroughBehavior: "when_no_match"
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        type: "mock"
+
+  /content/{id}:
+    get:
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "200 response"
+          schema:
+            $ref: "#/definitions/PostDetails"
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+      x-amazon-apigateway-integration:
+        requestTemplates:
+          application/json: "##  See http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html\n\
+            ##  This template will pass through all parameters including path, querystring,\
+            \ header, stage variables, and context through to the integration endpoint\
+            \ via the body/payload\n#set($allParams = $input.params())\n{\n#foreach($type\
+            \ in $allParams.keySet())\n    #set($params = $allParams.get($type))\n\
+            \"$type\" : {\n    #foreach($paramName in $params.keySet())\n    \"$paramName\"\
+            \ : \"$util.escapeJavaScript($params.get($paramName))\"\n        #if($foreach.hasNext),#end\n\
+            \    #end\n},\n#end\n\"context\" : {\n    \"http-method\" : \"$context.httpMethod\"\
+            ,\n    \"resource-path\" : \"$context.resourcePath\"\n}\n}\n"
+        uri: "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:037954390517:function:getCalligreContent/invocations"
+        passthroughBehavior: "when_no_templates"
+        httpMethod: "POST"
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        type: "aws"
+    delete:
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "200 response"
+          schema:
+            $ref: "#/definitions/Empty"
+      x-amazon-apigateway-integration:
+        requestTemplates:
+          application/json: "#set($allParams = $input.params())\n{\n#foreach($type\
+            \ in $allParams.keySet())\n    #set($params = $allParams.get($type))\n\
+            \"$type\" : {\n    #foreach($paramName in $params.keySet())\n    \"$paramName\"\
+            \ : \"$util.escapeJavaScript($params.get($paramName))\"\n        #if($foreach.hasNext),#end\n\
+            \    #end\n},\n#end\n\"context\" : {\n    \"http-method\" : \"$context.httpMethod\"\
+            ,\n    \"resource-path\" : \"$context.resourcePath\"\n}\n}"
+        uri: "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:037954390517:function:deleteContent/invocations"
+        passthroughBehavior: "when_no_templates"
+        httpMethod: "POST"
+        responses:
+          default:
+            statusCode: "200"
+        type: "aws"
+    options:
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "200 response"
+          schema:
+            $ref: "#/definitions/Empty"
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Headers:
+              type: "string"
+      x-amazon-apigateway-integration:
+        requestTemplates:
+          application/json: "{\"statusCode\": 200}"
+        passthroughBehavior: "when_no_match"
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        type: "mock"
+  /content/{id}/likes:
+    get:
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "200 response"
+          schema:
+            $ref: "#/definitions/LikeUsers"
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+      x-amazon-apigateway-integration:
+        requestTemplates:
+          application/json: "##  See http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html\n\
+            ##  This template will pass through all parameters including path, querystring,\
+            \ header, stage variables, and context through to the integration endpoint\
+            \ via the body/payload\n#set($allParams = $input.params())\n{\n#foreach($type\
+            \ in $allParams.keySet())\n    #set($params = $allParams.get($type))\n\
+            \"$type\" : {\n    #foreach($paramName in $params.keySet())\n    \"$paramName\"\
+            \ : \"$util.escapeJavaScript($params.get($paramName))\"\n        #if($foreach.hasNext),#end\n\
+            \    #end\n},\n#end\n\"context\" : {\n    \"http-method\" : \"$context.httpMethod\"\
+            ,\n    \"resource-path\" : \"$context.resourcePath\"\n}\n}\n"
+        uri: "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:037954390517:function:getContentLikes/invocations"
+        passthroughBehavior: "when_no_templates"
+        httpMethod: "POST"
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        type: "aws"
+    post:
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "200 response"
+          schema:
+            $ref: "#/definitions/Empty"
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+        500:
+          description: "500 response"
+          schema:
+            $ref: "#/definitions/Error"
+      x-amazon-apigateway-integration:
+        requestTemplates:
+          application/json: "##  See http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html\n\
+            ##  This template will pass through all parameters including path, querystring,\
+            \ header, stage variables, and context through to the integration endpoint\
+            \ via the body/payload\n#set($allParams = $input.params())\n{\n#foreach($type\
+            \ in $allParams.keySet())\n    #set($params = $allParams.get($type))\n\
+            \"$type\" : {\n    #foreach($paramName in $params.keySet())\n    \"$paramName\"\
+            \ : \"$util.escapeJavaScript($params.get($paramName))\"\n        #if($foreach.hasNext),#end\n\
+            \    #end\n},\n#end\n\"context\" : {\n    \"http-method\" : \"$context.httpMethod\"\
+            ,\n    \"resource-path\" : \"$context.resourcePath\"\n},\n\"userid\":\
+            \ $input.json('$.userid')\n}\n"
+        uri: "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:037954390517:function:addContentLike/invocations"
+        passthroughBehavior: "when_no_templates"
+        httpMethod: "POST"
+        responses:
+          ^*500*:
+            statusCode: "500"
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        type: "aws"
+    delete:
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "200 response"
+          schema:
+            $ref: "#/definitions/Empty"
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+        500:
+          description: "500 response"
+          schema:
+            $ref: "#/definitions/Error"
+      x-amazon-apigateway-integration:
+        requestTemplates:
+          application/json: "##  See http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html\n\
+            ##  This template will pass through all parameters including path, querystring,\
+            \ header, stage variables, and context through to the integration endpoint\
+            \ via the body/payload\n#set($allParams = $input.params())\n{\n#foreach($type\
+            \ in $allParams.keySet())\n    #set($params = $allParams.get($type))\n\
+            \"$type\" : {\n    #foreach($paramName in $params.keySet())\n    \"$paramName\"\
+            \ : \"$util.escapeJavaScript($params.get($paramName))\"\n        #if($foreach.hasNext),#end\n\
+            \    #end\n},\n#end\n\"context\" : {\n    \"http-method\" : \"$context.httpMethod\"\
+            ,\n    \"resource-path\" : \"$context.resourcePath\"\n},\n\"userid\":\
+            \ $input.json('$.userid')\n}\n"
+        uri: "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:037954390517:function:addContentLike/invocations"
+        passthroughBehavior: "when_no_templates"
+        httpMethod: "POST"
+        responses:
+          ^*500*:
+            statusCode: "500"
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        type: "aws"
+    options:
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "200 response"
+          schema:
+            $ref: "#/definitions/Empty"
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Headers:
+              type: "string"
+      x-amazon-apigateway-integration:
+        requestTemplates:
+          application/json: "{\"statusCode\": 200}"
+        passthroughBehavior: "when_no_match"
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        type: "mock"
+definitions:
+  Empty:
+    type: "object"
+    title: "Empty Schema"
+  Error:
+    type: "object"
+    properties:
+      message:
+        type: "string"
+    title: "Error Schema"
+  PostList:
+    type: "object"
+    title: "List of posts"
+    properties:
+      count:
+        type: "integer"
+      nextOffset:
+        type: "string"
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/PostDetails'
+  PostDetails:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+      content:
+        type: "string"
+      media_link:
+        type: "string"
+      like_count:
+        type: "integer"
+      poster_id:
+        type: "integer"
+      poster_name:
+        type: "string"
+      poster_icon:
+        type: "string"
+  PostAck:
+    type: "object"
+    title: "Post submission Acknowledgement"
+    properties:
+      id:
+        type: "string"
+  LikeUsers:
+    type: array
+    title: "List of user ids & names who liked a post"
+    items:
+      $ref: '#/definitions/LikeUser'
+  LikeUser:
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+  MediaDestUrl:
+    type: string
+  NewPost:
+    type: object
+    properties:
+      text:
+        type: string
+      media_url:
+        type: string
