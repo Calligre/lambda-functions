@@ -504,6 +504,8 @@ definitions:
         type: "string"
       poster_icon:
         type: "string"
+      current_user_likes:
+        type: boolean
   PostAck:
     type: "object"
     title: "Post submission Acknowledgement"
@@ -531,3 +533,7 @@ definitions:
         type: string
       media_url:
         type: string
+      post_fb:
+        type: boolean
+      post_twitter:
+        type: boolean
