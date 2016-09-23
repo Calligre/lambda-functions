@@ -1,29 +1,35 @@
 import boto3, pprint
+import json
 from decimal import Decimal
 from boto3.dynamodb.conditions import Attr, Key
+dynamo = boto3.resource('dynamodb', region_name="us-west-2").Table("calligre-posts")
 
 def lambda_handler(event, context):
-    print("Received event: " + pprint.pformat(event))
-    dynamo = boto3.resource('dynamodb', region_name="us-west-2").Table("calligre-posts")
-    proj="likes"
+    path_params = event.get("pathParameters") or {}
+    postid = path_params.get("id")
 
-    postid = event.get("path", {}).get("id")
     if postid is None:
-        return {"statusCode": 400, "msg": "No post ID specified"}
+        return {"statusCode": 400, "msg": "No post ID provided"}
     r = dynamo.query(
-        ScanIndexForward=False,
-        ProjectionExpression=proj,
+        ProjectionExpression="likers",
         KeyConditionExpression=Key("posts").eq("posts") & Key("timestamp").eq(Decimal(postid)),
     )
+    if r.get("ResponseMetadata", {}).get("HTTPStatusCode", 500) == 500:
+        return {"statusCode": 500, "msg": "Internal Server Error"}
     items = r.get("Items", [])
-    if len(items) == 0:
+    if len(items) != 1:
         return {
             "statusCode": 404,
-            "msg": "No post matching that ID found"
+            "body": "No post matching that ID found"
         }
-    likes = items[0].get("likes", [])
-    print(r)
+    liker_ids = items[0].get("likers", [])
+    # SQL lookup: select id, name from users where id in liker_ids
+    likers = {
+        "temp id": "Testing User 1",
+        "temp id 2": "Testing User 2"
+    }
+
     return {
-        "statusCode": r.get("ResponseMetadata", {}).get("HTTPStatusCode", 500),
-        "likers": list(likes)
+        "statusCode": 200, # or PostgresError
+        "body": json.dumps(likers)
     }

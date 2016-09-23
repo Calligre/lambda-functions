@@ -155,6 +155,8 @@ paths:
           description: "200 response"
           schema:
             $ref: "#/definitions/Empty"
+        400:
+          description: "No post ID provided."
         403:
           description: "The post you are trying to delete isn't owned by you."
         404:
@@ -200,6 +202,10 @@ paths:
           headers:
             Access-Control-Allow-Origin:
               type: "string"
+        400:
+          description: "No post ID provided."
+        404:
+          description: "The post specified doesn't exist."
     post:
       consumes:
       - "application/json"
