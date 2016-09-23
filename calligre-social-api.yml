@@ -49,6 +49,8 @@ paths:
           headers:
             Access-Control-Allow-Origin:
               type: "string"
+        404:
+          description: There are currently no posts
     post:
       consumes:
       - "application/json"
@@ -136,6 +138,8 @@ paths:
           headers:
             Access-Control-Allow-Origin:
               type: "string"
+        404:
+          description: Post not found
     delete:
       consumes:
       - "application/json"
