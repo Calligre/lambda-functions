@@ -151,6 +151,10 @@ paths:
           description: "200 response"
           schema:
             $ref: "#/definitions/Empty"
+        403:
+          description: "The post you are trying to delete isn't owned by you."
+        404:
+          description: "The post you are trying to delete doesn't exist."
     options:
       consumes:
       - "application/json"
