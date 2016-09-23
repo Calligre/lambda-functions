@@ -25,7 +25,7 @@ def lambda_handler(event, context):
     if limit > 25:
         limit = 25
 
-    proj="#ts,posterid,#txt,media_link,like_count"
+    proj="#ts,poster_id,#txt,media_link,like_count"
     reservedWords = {
         "#ts":"timestamp",
         "#txt": "text"
