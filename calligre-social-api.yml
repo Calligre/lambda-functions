@@ -68,6 +68,8 @@ paths:
           headers:
             Access-Control-Allow-Origin:
               type: "string"
+        400:
+          description: "Bad request"
     options:
       consumes:
       - "application/json"
