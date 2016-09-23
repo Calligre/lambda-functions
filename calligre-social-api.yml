@@ -134,7 +134,7 @@ paths:
         200:
           description: "200 response"
           schema:
-            $ref: "#/definitions/PostDetails"
+            $ref: "#/definitions/PostList"
           headers:
             Access-Control-Allow-Origin:
               type: "string"
