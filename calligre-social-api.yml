@@ -480,25 +480,28 @@ definitions:
         type: "integer"
       nextOffset:
         type: "string"
-      items:
+      posts:
         type: array
         items:
           $ref: '#/definitions/PostDetails'
   PostDetails:
     type: "object"
     description: |
-      This is a single post.
+      Details of a post. The ID of the post is the fractional post time in UTC, cast that to a float & interpret it if need be.
     properties:
       id:
         type: "string"
-      content:
+      timestamp:
+        type: "float"
+      text:
         type: "string"
       media_link:
         type: "string"
+        description: "Not included if no media was submitted"
       like_count:
         type: "integer"
       poster_id:
-        type: "integer"
+        type: "string"
       poster_name:
         type: "string"
       poster_icon:

@@ -10,7 +10,7 @@ def lambda_handler(event, context):
     item = {
         "posts": "posts",
         "timestamp" : timestamp,
-        "posterid" : details.get("posterid"),
+        "poster_id" : details.get("poster_id"),
         "like_count" : 0,
         "text": details.get("text", "No text provided")
     }
