@@ -75,11 +75,16 @@ def lambda_handler(event, context):
     if nextOffset is not None:
         nextOffset = str(nextOffset)
 
-    response = {
+    status = r.get("ResponseMetadata", {}).get("HTTPStatusCode", 500)
+    if r.get("Count", 0) == 0:
+        status = 404
+
+    body = {
         "posts": posts,
         "count": r.get("Count", 0),
         "nextOffset" : nextOffset
     }
-    return {"statusCode": r.get("ResponseMetadata", {}).get("HTTPStatusCode", 500),
-        "body": json.dumps(response, default=decimal_default),
-        "headers":{}}
+
+    return {"statusCode": status,
+        "body": json.dumps(body, default=decimal_default)
+    }
