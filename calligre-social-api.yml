@@ -306,7 +306,8 @@ definitions:
       id:
         type: "string"
       timestamp:
-        type: "float"
+        type: "number"
+        format: "float"
       text:
         type: "string"
       media_link:
