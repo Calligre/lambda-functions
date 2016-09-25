@@ -224,6 +224,8 @@ paths:
           headers:
             Access-Control-Allow-Origin:
               type: "string"
+        400:
+          description: "No post ID provided."
         500:
           description: "500 response"
           schema:
@@ -246,6 +248,8 @@ paths:
           headers:
             Access-Control-Allow-Origin:
               type: "string"
+        400:
+          description: "No post ID provided."
         500:
           description: "500 response"
           schema:
