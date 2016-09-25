@@ -1,5 +1,5 @@
 # Lambda Functions
-Calligra API for social content.
+Calligre API for social content.
 
 ## Notes
 Terraform all the things:
