@@ -1,0 +1,12 @@
+*_token.json
+*.dist-info
+*.egg-info
+__pycache__/
+.cache/
+examples/
+oauthlib/
+tweepy/
+requests/
+requests_oauthlib/
+six.py*
+ext-services.zip
