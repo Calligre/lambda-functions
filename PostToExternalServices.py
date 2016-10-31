@@ -35,7 +35,7 @@ def set_secrets():
         log.error("Didn't fetch any secrets!")
         raise Exception
     elif len(retrieved_secrets) < 4:
-        log.warn("Number of secrets seems oddly small...")
+        log.warning("Number of secrets seems oddly small...")
     secrets.update(retrieved_secrets)
 
 
