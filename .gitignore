@@ -1,4 +1,4 @@
-*_token.json
+secrets.json
 *.dist-info
 *.egg-info
 __pycache__/

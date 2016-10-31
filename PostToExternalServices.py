@@ -18,30 +18,33 @@ log = logging.getLogger()  # pylint: disable=C0103
 log.setLevel(logging.DEBUG)
 
 
-def set_auth0_client_details():
-    log.info("Fetching Auth0 client details")
+def set_secrets():
+    log.info("Fetching secrets from S3")
     try:
         response = s3_client.get_object(
             Bucket="calligre-config",
-            Key="auth0_token.json",
+            Key="secrets.json",
         )
     except Exception as ex:
         log.error(ex)
         raise ex
 
     content = response.get("Body").read()
-    tokens = json.loads(content)
-    if not tokens.get("AUTH0_CLIENT_ID"):
-        log.error("Didn't fetch Auth0 client settings!")
-    secrets["AUTH0_CLIENT_ID"] = tokens["AUTH0_CLIENT_ID"]
-    secrets["AUTH0_CLIENT_SECRET"] = tokens["AUTH0_CLIENT_SECRET"]
+    retrieved_secrets = json.loads(content)
+    if len(retrieved_secrets) == 0:
+        log.error("Didn't fetch any secrets!")
+        raise Exception
+    elif len(retrieved_secrets) < 4:
+        log.warn("Number of secrets seems oddly small...")
+    secrets.update(retrieved_secrets)
 
 
 def set_auth0_token():
     log.info("Fetching Auth0 token")
     if not (secrets.get("AUTH0_CLIENT_ID") and
             secrets.get("AUTH0_CLIENT_SECRET")):
-        set_auth0_client_details()
+        log.error("Auth0 Client Tokens not set!")
+        raise Exception
     payload = {
         "client_id": secrets.get("AUTH0_CLIENT_ID"),
         "client_secret": secrets.get("AUTH0_CLIENT_SECRET"),
@@ -94,31 +97,12 @@ def post_fb_photo(user_token, message, file_path):
     requests.post("%s/me/photos" % FB_BASE, data=fb_photo_data, files=files)
 
 
-def set_twitter_client_details():
-    log.info("Fetching Twitter client details")
-    try:
-        response = s3_client.get_object(
-            Bucket="calligre-config",
-            Key="twitter_token.json",
-        )
-    except Exception as ex:
-        log.error(ex)
-        raise ex
-
-    content = response.get("Body").read()
-    tokens = json.loads(content)
-    if not tokens.get("TWITTER_CLIENT_ID"):
-        log.error("Didn't fetch Twitter client settings!")
-        raise Exception
-    secrets["TWITTER_CLIENT_ID"] = tokens["TWITTER_CLIENT_ID"]
-    secrets["TWITTER_CLIENT_SECRET"] = tokens["TWITTER_CLIENT_SECRET"]
-
-
 def post_tw_message(access_token, access_secret, message, media_path=None):
     # dev ref: https://dev.twitter.com/rest/reference/post/statuses/update
     if not (secrets.get("TWITTER_CLIENT_ID") and
             secrets.get("TWITTER_CLIENT_SECRET")):
-        set_twitter_client_details()
+        log.error("Twitter Client Tokens not set, failing!")
+        raise Exception
     auth = tweepy.OAuthHandler(secrets.get("TWITTER_CLIENT_ID"),
                                secrets.get("TWITTER_CLIENT_SECRET"))
     auth.set_access_token(access_token, access_secret)
@@ -132,6 +116,8 @@ def post_tw_message(access_token, access_secret, message, media_path=None):
 
 
 def handler(event, _):
+    if len(secrets) == 0:
+        set_secrets()
     for record in event["Records"]:
         log.debug(record)
         sns = record.get("Sns")
