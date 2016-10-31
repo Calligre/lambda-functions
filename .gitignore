@@ -1,12 +1,5 @@
 secrets.json
-*.dist-info
-*.egg-info
 __pycache__/
 .cache/
-examples/
-oauthlib/
-tweepy/
-requests/
-requests_oauthlib/
-six.py*
+ext-posts-dependencies/
 ext-services.zip
