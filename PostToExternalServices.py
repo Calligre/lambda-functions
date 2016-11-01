@@ -36,6 +36,7 @@ def set_secrets():
     except AttributeError as ex:
         log.error("S3 response didn't contain Body: %s", response)
         log.exception(ex)
+        raise ex
     retrieved_secrets = json.loads(content)
     assert len(retrieved_secrets) > 0, "Didn't fetch any secrets!"
 
@@ -72,7 +73,7 @@ def get_auth0_user_tokens(user_id):
         set_auth0_token()
     headers = {"Authorization": "Bearer %s" % secrets.get("AUTH0_TOKEN")}
     try:
-        return requests.get("%s/users/%s" % (AUTH0_API, user_id),
+        return requests.get("%susers/%s" % (AUTH0_API, user_id),
                             headers=headers).\
                             json().\
                             get("identities")
@@ -120,7 +121,7 @@ def post_tw_message(access_token, access_secret, message, media_path=None):
 def handler(event, _):
     if len(secrets) == 0:
         set_secrets()
-    for record in event.get("Records"):
+    for record in event.get("Records", []):
         log.debug(record)
         sns = record.get("Sns")
         if not sns:
