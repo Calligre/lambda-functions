@@ -2,9 +2,7 @@
 set -e
 
 export DEP_FOLDER="ext-posts-dependencies"
-if [ ! -d "${DEP_FOLDER}" ]; then
-    mkdir -p ${DEP_FOLDER}
-fi
+mkdir -p ${DEP_FOLDER}
 if [ ! -d "${DEP_FOLDER}/requests-2.11.1.dist-info" ]; then
     pip install -t ${DEP_FOLDER} -r requirements.txt
     find ${DEP_FOLDER} -name '*.py' -delete
