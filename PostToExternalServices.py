@@ -141,7 +141,7 @@ def handler(event, _):
         file_path = None
         if media_s3:
             file_path = os.path.join("/tmp", media_s3)
-            s3_client.download_fileobj(S3_BUCKET, media_s3, file_path)
+            s3_client.download_file(S3_BUCKET, media_s3, file_path)
 
         for network in get_auth0_user_tokens(userid):
             if network.get("connection") == "facebook" and post_fb:
