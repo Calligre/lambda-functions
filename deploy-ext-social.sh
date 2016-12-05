@@ -10,7 +10,7 @@ pyflakes ${HANDLER}
 mkdir -p ${DEP_FOLDER}
 cd ${DEP_FOLDER}
 if [ ! -d "requests-2.11.1.dist-info" ]; then
-    pip install -t . -r requirements.txt
+    pip install -t . -r ../ext-social-requirements.txt
     find . -name '*.py' -delete
 fi
 
