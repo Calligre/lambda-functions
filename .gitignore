@@ -1,5 +1,11 @@
 secrets.json
 __pycache__/
 .cache/
+bin/
+include/
+lib/
+local/
 ext-posts-dependencies/
 ext-services.zip
+resize-dependencies/
+resize.zip
