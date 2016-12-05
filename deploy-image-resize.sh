@@ -10,6 +10,7 @@ pyflakes ${HANDLER}
 mkdir -p ${DEP_FOLDER}
 cd ${DEP_FOLDER}
 if [ ! -d "Pillow-3.4.2.dist-info" ]; then
+    # Updates: Use the latest cp27mu-manylinux1 wheel from https://pypi.python.org/pypi/Pillow/
     wget https://pypi.python.org/packages/c0/47/6900d13aa6112610df4c9b34d57f50a96b35308796a3a27458d0c9ac87f7/Pillow-3.4.2-cp27-cp27mu-manylinux1_x86_64.whl
     unzip Pillow-3.4.2-cp27-cp27mu-manylinux1_x86_64.whl
     rm Pillow-3.4.2-cp27-cp27mu-manylinux1_x86_64.whl
