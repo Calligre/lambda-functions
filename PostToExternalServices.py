@@ -108,7 +108,7 @@ def post_tw_message(access_token, access_secret, message, media):
     log.debug(api.update_status(message))
 
 
-def handler(event, _): # pylint: disable=R0912
+def handler(event, _):  # pylint: disable=R0912
     if len(secrets) == 0:
         set_secrets()
     for record in event.get("Records", []):
