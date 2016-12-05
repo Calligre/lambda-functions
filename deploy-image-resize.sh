@@ -9,14 +9,13 @@ pep8 ${HANDLER}
 pyflakes ${HANDLER}
 mkdir -p ${DEP_FOLDER}
 cd ${DEP_FOLDER}
-if [ ! -d "Pillow-3.1.1-py2.7.egg-info" ]; then
-    wget https://raw.githubusercontent.com/Miserlou/lambda-packages/cc02ac84589e92e28c55f811292cdaeae7a87e5d/lambda_packages/Pillow/Pillow-3.1.1.tar.gz
-    tar -xzf Pillow-3.1.1.tar.gz
-    rm Pillow-3.1.1.tar.gz
-    find . -name '*.py' -delete
+if [ ! -d "Pillow-3.4.2.dist-info" ]; then
+    wget https://pypi.python.org/packages/c0/47/6900d13aa6112610df4c9b34d57f50a96b35308796a3a27458d0c9ac87f7/Pillow-3.4.2-cp27-cp27mu-manylinux1_x86_64.whl
+    unzip Pillow-3.4.2-cp27-cp27mu-manylinux1_x86_64.whl
+    rm Pillow-3.4.2-cp27-cp27mu-manylinux1_x86_64.whl
 fi
 
-zip -r ../${DEST_FILE} PIL lib*
+zip -r ../${DEST_FILE} PIL
 cd ..
 zip -r ${DEST_FILE} ${HANDLER}
 aws s3 cp ${DEST_FILE} "s3://calligre/${DEST_FILE}"
