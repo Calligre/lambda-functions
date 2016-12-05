@@ -18,7 +18,8 @@ def handler(event, _):
         # S3 keys are urlencoded in event notifications
         # https://docs.aws.amazon.com/AmazonS3/latest/dev/notification-content-structure.html
         key = unquote_plus(record['s3']['object']['key'])
-        log.debug("Got new file: %s:%s", bucket, key)
+        size = record['s3']['object']['size']
+        log.debug("Got new file: %s:%s, size %d", bucket, key, size)
         original = get_file(bucket, key)
         resized = resize_image(original)
         put_file(resized,
@@ -43,9 +44,9 @@ def resize_image(src):
     # We use 1024 px on the longest edge as a good balance
     size = (1024, 1024)
     _, outfile = mkstemp()
-    log.debug("Resizing: %s", src)
     try:
         image = Image.open(src)
+        log.debug("Resizing: %s, original size: %dx%d", src, image.size())
         image.thumbnail(size)
         image.save(outfile, "JPEG")
         return outfile
