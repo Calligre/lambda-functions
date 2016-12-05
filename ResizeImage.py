@@ -19,7 +19,7 @@ def handler(event, _):
         # https://docs.aws.amazon.com/AmazonS3/latest/dev/notification-content-structure.html
         key = unquote_plus(record['s3']['object']['key'])
         log.debug("Got new file: %s:%s", bucket, key)
-        original = get_file(original, bucket, key)
+        original = get_file(bucket, key)
         resized = resize_image(original)
         put_file(resized,
                  os.environ.get('DEST_BUCKET', 'calligre-images'),
@@ -39,7 +39,7 @@ def get_file(bucket, key):
 
 
 def resize_image(src):
-    # thumbnail is badly named, it'll resize the image while keping the aspect ratio
+    # thumbnail is badly named, it resizes the image, keeping the aspect ratio
     # We use 1024 px on the longest edge as a good balance
     size = (1024, 1024)
     _, outfile = mkstemp()
