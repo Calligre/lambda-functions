@@ -11,6 +11,8 @@ s3 = boto3.client('s3')  # pylint: disable=C0103
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 log.setLevel(logging.DEBUG)
 
+DEST_BUCKET = os.environ.get('DEST_BUCKET', 'calligre-images')
+
 
 def handler(event, _):
     for record in event['Records']:
@@ -22,9 +24,7 @@ def handler(event, _):
         log.debug("Got new file: %s:%s, size %d", bucket, key, size)
         original = get_file(bucket, key)
         resized = resize_image(original)
-        put_file(resized,
-                 os.environ.get('DEST_BUCKET', 'calligre-images'),
-                 key)
+        put_file(resized, DEST_BUCKET, key)
         delete_file(bucket, key)
 
 
