@@ -69,7 +69,7 @@ def put_file(src, bucket, key):
 def delete_file(bucket, key):
     log.debug("Deleting: %s:%s", bucket, key)
     try:
-        bucket.delete_object( Key=key)
+        bucket.delete_object(Key=key)
     except Exception as ex:
         log.exception(ex)
         raise ex
