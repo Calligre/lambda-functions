@@ -19,5 +19,5 @@ fi
 zip -r ../${DEST_FILE} PIL
 cd ..
 zip -r ${DEST_FILE} ${HANDLER}
-aws s3 cp ${DEST_FILE} "s3://calligre/${DEST_FILE}"
-aws lambda update-function-code --function-name calligre-resize-images --s3-bucket calligre --s3-key "${DEST_FILE}" --publish --region us-west-2
+aws s3 cp ${DEST_FILE} "s3://calligre/${DEST_FILE}" --profile calligre
+aws lambda update-function-code --function-name calligre-resize-images --s3-bucket calligre --s3-key "${DEST_FILE}" --publish --region us-west-2 --profile calligre

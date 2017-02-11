@@ -6,7 +6,7 @@ from urllib import unquote_plus
 from PIL import Image
 import boto3
 
-s3 = boto3.client('s3')  # pylint: disable=C0103
+s3 = boto3.resource('s3')  # pylint: disable=C0103
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 log.setLevel(logging.DEBUG)
@@ -22,17 +22,18 @@ def handler(event, _):
         key = unquote_plus(record['s3']['object']['key'])
         size = record['s3']['object']['size']
         log.debug("Got new file: %s:%s, size %d", bucket, key, size)
-        original = get_file(bucket, key)
+        src_bucket = s3.Bucket(bucket)
+        original = get_file(src_bucket, key)
         resized = resize_image(original)
         put_file(resized, DEST_BUCKET, key)
-        delete_file(bucket, key)
+        delete_file(src_bucket, key)
 
 
 def get_file(bucket, key):
     log.debug("Fetching file: %s:%s", bucket, key)
     try:
         _, dest = mkstemp()
-        s3.download_file(bucket, key, dest)
+        bucket.download_file(key, dest)
         return dest
     except Exception as ex:
         log.exception(ex)
@@ -58,7 +59,8 @@ def resize_image(src):
 def put_file(src, bucket, key):
     log.debug("Putting %s into %s:%s", src, bucket, key)
     try:
-        s3.upload_file(src, bucket, key)
+        s3.Bucket(bucket).upload_file(src, key)
+        s3.Object(bucket, key).Acl().put(ACL='public-read')
     except Exception as ex:
         log.exception(ex)
         raise ex
@@ -67,7 +69,7 @@ def put_file(src, bucket, key):
 def delete_file(bucket, key):
     log.debug("Deleting: %s:%s", bucket, key)
     try:
-        s3.delete_object(Bucket=bucket, Key=key)
+        bucket.delete_object(Key=key)
     except Exception as ex:
         log.exception(ex)
         raise ex
