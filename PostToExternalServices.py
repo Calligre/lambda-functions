@@ -22,7 +22,8 @@ def get_auth0_token():
         "grant_type": "client_credentials"
     }
     try:
-        token = requests.post("{}/oauth/token".format(AUTH0_BASE), json=payload).\
+        token = requests.post("{}/oauth/token".format(AUTH0_BASE),
+                              json=payload).\
             json()
     except Exception as ex:
         log.exception(ex)
