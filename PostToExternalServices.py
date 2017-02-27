@@ -71,14 +71,14 @@ def post_tw_message(access_token, access_secret, message, media):
     auth = tweepy.OAuthHandler(os.environ['TWITTER_CLIENT_ID'],
                                os.environ['TWITTER_CLIENT_SECRET'])
     auth.set_access_token(access_token, access_secret)
-    api = tweepy.API(auth)
+    twitter = tweepy.API(auth)
 
     if media.get('bucket'):
         file_path = os.path.join("/tmp", media.get('key'))
         s3_client.download_file(media.get('bucket'),
                                 media.get('key'),
                                 file_path)
-        log.debug(api.update_with_media(file_path, message))
+        log.debug(twitter.update_with_media(file_path, message))
         return
 
     if media.get('link'):
@@ -86,7 +86,7 @@ def post_tw_message(access_token, access_secret, message, media):
             message = message[0:113] + "..."
         message = '{} {}'.format(message, media.get('link'))
 
-    log.debug(api.update_status(message))
+    log.debug(twitter.update_status(message))
 
 
 def handler(event, _):  # pylint: disable=R0912
