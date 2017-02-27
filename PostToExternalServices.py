@@ -1,5 +1,6 @@
 import logging
 import os
+import tempfile
 
 import boto3
 import requests
@@ -74,11 +75,16 @@ def post_tw_message(access_token, access_secret, message, media):
     twitter = tweepy.API(auth)
 
     if media.get('bucket'):
-        file_path = os.path.join("/tmp", media.get('key'))
+        f = tempfile.mkstemp(prefix=media.get('key'))
+        # We want the S3 client to write to it, and the Twitter client to read
+        # close the open file descriptor
+        f[0].close()
+        file_path = f[1]
         s3_client.download_file(media.get('bucket'),
                                 media.get('key'),
                                 file_path)
         log.debug(twitter.update_with_media(file_path, message))
+        os.remove(file_path)
         return
 
     if media.get('link'):
