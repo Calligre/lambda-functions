@@ -82,8 +82,8 @@ def post_tw_message(access_token, access_secret, message, media):
 
     if media.get('link'):
         if len(message) > 113:
-            message = message[0:113]
-        message = '{}... {}'.format(message, media.get('link'))
+            message = message[0:113] + "..."
+        message = '{} {}'.format(message, media.get('link'))
 
     log.debug(api.update_status(message))
 
