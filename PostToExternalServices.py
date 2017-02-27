@@ -15,6 +15,8 @@ s3_client = boto3.client('s3')  # pylint: disable=C0103
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 log.setLevel(logging.DEBUG)
 
+
+
 def get_auth0_token():
     payload = {
         "client_id": os.environ['AUTH0_CLIENT_ID'],
@@ -33,6 +35,7 @@ def get_auth0_token():
         log.error("Failed to fetch Auth0 Token!")
         raise Exception("Failed to fetch Auth0 Token!")
     return token.get("access_token")
+
 
 # We need to have the Auth0 token, so run it on Lambda startup
 AUTH0_TOKEN = get_auth0_token()
@@ -75,11 +78,11 @@ def post_tw_message(access_token, access_secret, message, media):
     twitter = tweepy.API(auth)
 
     if media.get('bucket'):
-        f = tempfile.mkstemp(prefix=media.get('key'))
+        temp_file = tempfile.mkstemp(prefix=media.get('key'))
         # We want the S3 client to write to it, and the Twitter client to read
-        # close the open file descriptor
-        f[0].close()
-        file_path = f[1]
+        # so close the open file descriptor
+        temp_file[0].close()
+        file_path = temp_file[1]
         s3_client.download_file(media.get('bucket'),
                                 media.get('key'),
                                 file_path)
