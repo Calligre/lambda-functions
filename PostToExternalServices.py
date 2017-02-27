@@ -16,7 +16,6 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 log.setLevel(logging.DEBUG)
 
 
-
 def get_auth0_token():
     payload = {
         "client_id": os.environ['AUTH0_CLIENT_ID'],
