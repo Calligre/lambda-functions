@@ -1,79 +1,49 @@
-import json
 import logging
 import os
+import tempfile
 
 import boto3
 import requests
 import tweepy
 
 AUTH0_BASE = "https://calligre.auth0.com"
-AUTH0_API = "%s/api/v2/" % AUTH0_BASE
+AUTH0_API = "{}/api/v2/".format(AUTH0_BASE)
 FB_BASE = "https://graph.facebook.com/v2.7"
-S3_BUCKET = "calligre-media"
-S3_CONFIG_BUCKET = "calligre-config"
 
 s3_client = boto3.client('s3')  # pylint: disable=C0103
 
-secrets = {}  # pylint: disable=C0103
-
-log = logging.getLogger()  # pylint: disable=C0103
+log = logging.getLogger(__name__)  # pylint: disable=C0103
 log.setLevel(logging.DEBUG)
 
 
-def set_secrets():
-    log.info("Fetching secrets from S3")
-    try:
-        response = s3_client.get_object(
-            Bucket=S3_CONFIG_BUCKET,
-            Key="secrets.json",
-        )
-    except Exception as ex:
-        log.exception(ex)
-        raise ex
-
-    try:
-        content = response.get("Body").read()
-    except AttributeError as ex:
-        log.error("S3 response didn't contain Body: %s", response)
-        log.exception(ex)
-        raise ex
-    retrieved_secrets = json.loads(content)
-    assert len(retrieved_secrets) > 0, "Didn't fetch any secrets!"
-
-    if len(retrieved_secrets) < 4:
-        log.warning("Number of secrets seems oddly small...")
-    secrets.update(retrieved_secrets)
-
-
-def set_auth0_token():
-    log.info("Fetching Auth0 token")
-    assert (secrets.get("AUTH0_CLIENT_ID") and
-            secrets.get("AUTH0_CLIENT_SECRET")),\
-        "Auth0 Client Tokens not set!"
-
+def get_auth0_token():
     payload = {
-        "client_id": secrets.get("AUTH0_CLIENT_ID"),
-        "client_secret": secrets.get("AUTH0_CLIENT_SECRET"),
+        "client_id": os.environ['AUTH0_CLIENT_ID'],
+        "client_secret": os.environ['AUTH0_CLIENT_SECRET'],
         "audience": AUTH0_API,
         "grant_type": "client_credentials"
     }
     try:
-        token = requests.post("%s/oauth/token" % AUTH0_BASE, json=payload).\
+        token = requests.post("{}/oauth/token".format(AUTH0_BASE),
+                              json=payload).\
             json()
     except Exception as ex:
         log.exception(ex)
         raise ex
-    secrets["AUTH0_TOKEN"] = token.get("access_token")
-    assert secrets["AUTH0_TOKEN"], "Failed to fetch Auth0 Token!"
-    log.info("Auth0 token set: %s", secrets["AUTH0_TOKEN"])
+    if not token.get("access_token"):
+        log.error("Failed to fetch Auth0 Token!")
+        raise Exception("Failed to fetch Auth0 Token!")
+    return token.get("access_token")
+
+
+# We need to have the Auth0 token, so run it on Lambda startup
+AUTH0_TOKEN = get_auth0_token()
 
 
 def get_auth0_user_tokens(user_id):
-    if not secrets.get("AUTH0_TOKEN"):
-        set_auth0_token()
-    headers = {"Authorization": "Bearer %s" % secrets.get("AUTH0_TOKEN")}
+    headers = {"Authorization": "Bearer {}".format(AUTH0_TOKEN)}
     try:
-        return requests.get("%susers/%s" % (AUTH0_API, user_id),
+        return requests.get("{}users/{}".format(AUTH0_API, user_id),
                             headers=headers).\
                             json().\
                             get("identities")
@@ -88,39 +58,46 @@ def post_fb_message(user_token, message):
         "message": message,
         "access_token": user_token
     }
-    requests.post("%s/me/feed" % FB_BASE, data=fb_data)
+    requests.post("{}/me/feed".format(FB_BASE), data=fb_data)
 
 
-def post_fb_photo(user_token, message, file_path):
+def post_fb_photo(user_token, message, link):
     fb_photo_data = {
         "caption": message,
-        "access_token": user_token
+        "access_token": user_token,
+        "url": link
     }
-    with open(file_path, "rb") as media_file:
-        requests.post("%s/me/photos" % FB_BASE,
-                      data=fb_photo_data,
-                      files={"file": media_file})
+    requests.post("{}/me/photos".format(FB_BASE), data=fb_photo_data)
 
 
-def post_tw_message(access_token, access_secret, message, media_path=None):
-    assert (secrets.get("TWITTER_CLIENT_ID") and
-            secrets.get("TWITTER_CLIENT_SECRET")),\
-            "Twitter Client Tokens not set, failing!"
-    auth = tweepy.OAuthHandler(secrets.get("TWITTER_CLIENT_ID"),
-                               secrets.get("TWITTER_CLIENT_SECRET"))
+def post_tw_message(access_token, access_secret, message, media):
+    auth = tweepy.OAuthHandler(os.environ['TWITTER_CLIENT_ID'],
+                               os.environ['TWITTER_CLIENT_SECRET'])
     auth.set_access_token(access_token, access_secret)
-    api = tweepy.API(auth)
+    twitter = tweepy.API(auth)
 
-    if media_path:
-        status = api.update_with_media(media_path, message)
-    else:
-        status = api.update_status(message)
-    log.debug(status)
+    if media.get('bucket'):
+        temp_file = tempfile.mkstemp(prefix=media.get('key'))
+        # We want the S3 client to write to it, and the Twitter client to read
+        # so close the open file descriptor
+        temp_file[0].close()
+        file_path = temp_file[1]
+        s3_client.download_file(media.get('bucket'),
+                                media.get('key'),
+                                file_path)
+        log.debug(twitter.update_with_media(file_path, message))
+        os.remove(file_path)
+        return
+
+    if media.get('link'):
+        if len(message) > 113:
+            message = message[0:113] + "..."
+        message = '{} {}'.format(message, media.get('link'))
+
+    log.debug(twitter.update_status(message))
 
 
-def handler(event, _):
-    if len(secrets) == 0:
-        set_secrets()
+def handler(event, _):  # pylint: disable=R0912
     for record in event.get("Records", []):
         log.debug(record)
         sns = record.get("Sns")
@@ -138,20 +115,33 @@ def handler(event, _):
         if post_tw:
             post_tw = post_tw == "True"
 
-        media_s3 = attrs.get("media_s3", {}).get("Value")
-        file_path = None
-        if media_s3:
-            file_path = os.path.join("/tmp", media_s3)
-            s3_client.download_file(S3_BUCKET, media_s3, file_path)
+        media_s3_bucket = attrs.get("media_s3_bucket", {}).get("Value")
+        media_s3_key = attrs.get("media_s3_key", {}).get("Value")
+
+        # Handle three cases: Media is in our S3 bucket, or is a link, or
+        # no media
+        # If our media is in our S3 bucket, build a link from that
+        if media_s3_bucket and media_s3_key:
+            tw_media = {'bucket': media_s3_bucket, 'key': media_s3_key}
+            fb_media = '{}/{}/{}'.format(s3_client.meta.endpoint_url,
+                                         media_s3_bucket,
+                                         media_s3_key)
+        elif attrs.get("media_link", {}).get("Value"):
+            fb_media = attrs.get("media_link", {}).get("Value")
+            tw_media = {'link': fb_media}
+        else:
+            tw_media = {}
+            fb_media = None
 
         for network in get_auth0_user_tokens(userid):
             if network.get("connection") == "facebook" and post_fb:
                 access_token = network.get("access_token")
-                if media_s3:
-                    post_fb_photo(access_token, text, file_path)
+                # FB API can take a media URL, so pass media_link in
+                if fb_media:
+                    post_fb_photo(access_token, text, fb_media)
                 else:
                     post_fb_message(access_token, text)
             elif network.get("connection") == "twitter" and post_tw:
                 access_token = network.get("access_token")
                 access_secret = network.get("access_token_secret")
-                post_tw_message(access_token, access_secret, text, file_path)
+                post_tw_message(access_token, access_secret, text, tw_media)
