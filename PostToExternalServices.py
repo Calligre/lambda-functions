@@ -6,7 +6,7 @@ import requests
 import tweepy
 
 AUTH0_BASE = "https://calligre.auth0.com"
-AUTH0_API = "%s/api/v2/" % AUTH0_BASE
+AUTH0_API = "{}/api/v2/".format(AUTH0_BASE)
 FB_BASE = "https://graph.facebook.com/v2.7"
 
 s3_client = boto3.client('s3')  # pylint: disable=C0103
@@ -41,7 +41,7 @@ def set_auth0_token():
         "grant_type": "client_credentials"
     }
     try:
-        token = requests.post("%s/oauth/token" % AUTH0_BASE, json=payload).\
+        token = requests.post("{}/oauth/token".format(AUTH0_BASE), json=payload).\
             json()
     except Exception as ex:
         log.exception(ex)
@@ -54,9 +54,9 @@ def set_auth0_token():
 def get_auth0_user_tokens(user_id):
     if not secrets.get("AUTH0_TOKEN"):
         set_auth0_token()
-    headers = {"Authorization": "Bearer %s" % secrets.get("AUTH0_TOKEN")}
+    headers = {"Authorization": "Bearer {}".format(AUTH0_TOKEN)}
     try:
-        return requests.get("%susers/%s" % (AUTH0_API, user_id),
+        return requests.get("{}users/{}".format(AUTH0_API, user_id),
                             headers=headers).\
                             json().\
                             get("identities")
@@ -71,7 +71,7 @@ def post_fb_message(user_token, message):
         "message": message,
         "access_token": user_token
     }
-    requests.post("%s/me/feed" % FB_BASE, data=fb_data)
+    requests.post("{}/me/feed".format(FB_BASE), data=fb_data)
 
 
 def post_fb_photo(user_token, message, link):
@@ -80,7 +80,7 @@ def post_fb_photo(user_token, message, link):
         "access_token": user_token,
         "url": link
     }
-    requests.post("%s/me/photos" % FB_BASE, data=fb_photo_data)
+    requests.post("{}/me/photos".format(FB_BASE), data=fb_photo_data)
 
 
 def post_tw_message(access_token, access_secret, message, media):
