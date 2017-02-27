@@ -11,32 +11,13 @@ FB_BASE = "https://graph.facebook.com/v2.7"
 
 s3_client = boto3.client('s3')  # pylint: disable=C0103
 
-secrets = {}  # pylint: disable=C0103
-
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 log.setLevel(logging.DEBUG)
 
-
-def set_secrets():
-    log.info("Setting secrets from env")
-    found = {k: v for k, v in os.environ.iteritems() if
-             k.startswith("AUTH0") or k.startswith("TWITTER")}
-    assert len(found) > 0, "Didn't fetch any secrets!"
-    if len(found) < 4:
-        log.warning("Number of secrets seems oddly small...")
-    log.info("Identified %s", ", ".join(found.keys()))
-    secrets.update(found)
-
-
-def set_auth0_token():
-    log.info("Fetching Auth0 token")
-    assert (secrets.get("AUTH0_CLIENT_ID") and
-            secrets.get("AUTH0_CLIENT_SECRET")),\
-        "Auth0 Client Tokens not set!"
-
+def get_auth0_token():
     payload = {
-        "client_id": secrets.get("AUTH0_CLIENT_ID"),
-        "client_secret": secrets.get("AUTH0_CLIENT_SECRET"),
+        "client_id": os.environ['AUTH0_CLIENT_ID'],
+        "client_secret": os.environ['AUTH0_CLIENT_SECRET'],
         "audience": AUTH0_API,
         "grant_type": "client_credentials"
     }
@@ -46,14 +27,16 @@ def set_auth0_token():
     except Exception as ex:
         log.exception(ex)
         raise ex
-    secrets["AUTH0_TOKEN"] = token.get("access_token")
-    assert secrets["AUTH0_TOKEN"], "Failed to fetch Auth0 Token!"
-    log.info("Auth0 token set: %s", secrets["AUTH0_TOKEN"])
+    if not token.get("access_token"):
+        log.error("Failed to fetch Auth0 Token!")
+        raise Exception("Failed to fetch Auth0 Token!")
+    return token.get("access_token")
+
+# We need to have the Auth0 token, so run it on Lambda startup
+AUTH0_TOKEN = get_auth0_token()
 
 
 def get_auth0_user_tokens(user_id):
-    if not secrets.get("AUTH0_TOKEN"):
-        set_auth0_token()
     headers = {"Authorization": "Bearer {}".format(AUTH0_TOKEN)}
     try:
         return requests.get("{}users/{}".format(AUTH0_API, user_id),
@@ -84,11 +67,8 @@ def post_fb_photo(user_token, message, link):
 
 
 def post_tw_message(access_token, access_secret, message, media):
-    assert (secrets.get("TWITTER_CLIENT_ID") and
-            secrets.get("TWITTER_CLIENT_SECRET")),\
-            "Twitter Client Tokens not set, failing!"
-    auth = tweepy.OAuthHandler(secrets.get("TWITTER_CLIENT_ID"),
-                               secrets.get("TWITTER_CLIENT_SECRET"))
+    auth = tweepy.OAuthHandler(os.environ['TWITTER_CLIENT_ID'],
+                               os.environ['TWITTER_CLIENT_SECRET'])
     auth.set_access_token(access_token, access_secret)
     api = tweepy.API(auth)
 
