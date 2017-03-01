@@ -47,7 +47,10 @@ def resize_image(src):
     _, outfile = mkstemp()
     try:
         image = Image.open(src)
-        log.debug("Resizing: %s, original size: %s", src, image.size())
+        log.debug("Resizing: %s, original size: %dx%d",
+                  src,
+                  image.width,
+                  image.height)
         image.thumbnail(size)
         image.save(outfile, "JPEG")
         return outfile
