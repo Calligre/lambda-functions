@@ -22,18 +22,18 @@ def handler(event, _):
         key = unquote_plus(record['s3']['object']['key'])
         size = record['s3']['object']['size']
         log.debug("Got new file: %s:%s, size %d", bucket, key, size)
-        src_bucket = s3.Bucket(bucket)
-        original = get_file(src_bucket, key)
+        s3_file_ref = s3.Object(bucket, key)
+        original = get_file(s3_file_ref)
         resized = resize_image(original)
         put_file(resized, DEST_BUCKET, key)
-        delete_file(src_bucket, key)
+        delete_file(s3_file_ref)
 
 
-def get_file(bucket, key):
-    log.debug("Fetching file: %s:%s", bucket, key)
+def get_file(s3_ref):
+    log.debug("Fetching file: %s:%s", s3_ref.bucket_name, s3_ref.key)
     try:
         _, dest = mkstemp()
-        bucket.download_file(key, dest)
+        s3_ref.download_file(dest)
         return dest
     except Exception as ex:
         log.exception(ex)
@@ -47,7 +47,10 @@ def resize_image(src):
     _, outfile = mkstemp()
     try:
         image = Image.open(src)
-        log.debug("Resizing: %s, original size: %s", src, image.size())
+        log.debug("Resizing: %s, original size: %dx%d",
+                  src,
+                  image.width,
+                  image.height)
         image.thumbnail(size)
         image.save(outfile, "JPEG")
         return outfile
@@ -66,10 +69,10 @@ def put_file(src, bucket, key):
         raise ex
 
 
-def delete_file(bucket, key):
-    log.debug("Deleting: %s:%s", bucket, key)
+def delete_file(s3_ref):
+    log.debug("Deleting: %s:%s", s3_ref.bucket_name, s3_ref.key)
     try:
-        bucket.delete_object(Key=key)
+        s3_ref.delete()
     except Exception as ex:
         log.exception(ex)
         raise ex
