@@ -67,8 +67,7 @@ def put_file(src, s3_ref):
             s3_ref.put(ACL='public-read',
                        Body=src_file,
                        CacheControl="max-age=2419200",
-                       ContentType="image/jpeg"
-                      )
+                       ContentType="image/jpeg")
     except Exception as ex:
         log.exception(ex)
         raise ex
