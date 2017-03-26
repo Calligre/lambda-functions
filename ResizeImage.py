@@ -63,12 +63,12 @@ def resize_image(src):
 def put_file(src, s3_ref):
     log.debug("Putting %s into %s:%s", src, s3_ref.bucket_name, s3_ref.key)
     try:
-        with open(src, 'rb') as f:
+        with open(src, 'rb') as src_file:
             s3_ref.put(ACL='public-read',
-                       Body=f,
+                       Body=src_file,
                        CacheControl="max-age=2419200",
                        ContentType="image/jpeg"
-            )
+                      )
     except Exception as ex:
         log.exception(ex)
         raise ex
