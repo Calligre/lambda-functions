@@ -25,7 +25,8 @@ def handler(event, _):
         s3_file_ref = s3.Object(bucket, key)
         original = get_file(s3_file_ref)
         resized = resize_image(original)
-        put_file(resized, DEST_BUCKET, key)
+        s3_resized_ref = s3.Object(DEST_BUCKET, key)
+        put_file(resized, s3_resized_ref)
         delete_file(s3_file_ref)
 
 
@@ -59,11 +60,14 @@ def resize_image(src):
         raise ex
 
 
-def put_file(src, bucket, key):
-    log.debug("Putting %s into %s:%s", src, bucket, key)
+def put_file(src, s3_ref):
+    log.debug("Putting %s into %s:%s", src, s3_ref.bucket_name, s3_ref.key)
     try:
-        s3.Bucket(bucket).upload_file(src, key)
-        s3.Object(bucket, key).Acl().put(ACL='public-read')
+        with open(src, 'rb') as src_file:
+            s3_ref.put(ACL='public-read',
+                       Body=src_file,
+                       CacheControl="max-age=2419200",
+                       ContentType="image/jpeg")
     except Exception as ex:
         log.exception(ex)
         raise ex
