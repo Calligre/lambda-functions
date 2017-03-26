@@ -58,10 +58,10 @@ def post_fb_message(user_token, message):
         "message": message,
         "access_token": user_token
     }
-    r = requests.post("{}/me/feed".format(FB_BASE), data=fb_data)
-    if not r.status_code == requests.codes.ok:
-        log.warning("Failed to post to FB: %s", r.text)
-        r.raise_for_status()
+    res = requests.post("{}/me/feed".format(FB_BASE), data=fb_data)
+    if not res.status_code == requests.codes.ok:
+        log.warning("Failed to post to FB: %s", res.text)
+        res.raise_for_status()
 
 
 def post_fb_photo(user_token, message, link):
@@ -70,10 +70,10 @@ def post_fb_photo(user_token, message, link):
         "access_token": user_token,
         "url": link
     }
-    r = requests.post("{}/me/photos".format(FB_BASE), data=fb_photo_data)
-    if not r.status_code == requests.codes.ok:
-        log.warning("Failed to post photo to FB: %s", r.text)
-        r.raise_for_status()
+    res = requests.post("{}/me/photos".format(FB_BASE), data=fb_photo_data)
+    if not res.status_code == requests.codes.ok:
+        log.warning("Failed to post photo to FB: %s", res.text)
+        res.raise_for_status()
 
 
 def post_tw_message(access_token, access_secret, message, media):
